@@ -1,0 +1,10 @@
+{
+    "printWidth": 120,
+    "tabWith": 2,
+    "singleQuote": true, 
+    "trailingCome": "none", 
+    "semi": true, 
+    "arrowParens": "always"
+  }
+
+  
