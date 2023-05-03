@@ -1,0 +1,43 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:14.6
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    user: postgres
+    ports:
+      - ${POSTGRES_PORT}:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 1s
+      retries: 30
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  flyway:
+    image: flyway/flyway:9.10.0
+    command: -url=jdbc:postgresql://postgres:5432/${POSTGRES_DB} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} migrate
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  express:
+    build: .
+    command: >
+      sh -c "npm run prod"
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    env_file: .env
+    environment:
+      APP_PORT: ${APP_PORT}
+      POSTGRES_HOST: host.docker.internal
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
